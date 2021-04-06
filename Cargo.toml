@@ -5,6 +5,7 @@ authors = ["Federico Stra <stra.federico@gmail.com>"]
 description = "Shrink PDF files using Ghostscript"
 license = "MIT"
 edition = "2018"
+repository = "https://github.com/FedericoStra/pdfshrink"
 keywords = ["PDF", "Ghostscript", "compression"]
 categories = ["command-line-utilities", "compression", "encoding", "filesystem"]
 
