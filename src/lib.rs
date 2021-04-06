@@ -1,3 +1,11 @@
+//! Shrink PDF files using [Ghostscript](https://www.ghostscript.com/).
+//!
+//! This library provides a simple way to execute a Ghostscript command
+//! which tries to optimize the resolution of embedded images in order
+//! to reduce the file size.
+//!
+//! Ghostscript need to be already installed on your system.
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -83,6 +91,9 @@ where
     }
 }
 
+/// Ghostscript command to shrink `inpath` and write to `outpath`.
+///
+/// This command requires Ghostscript installed as a program `gs`.
 pub fn gs_command<P, Q>(inpath: P, outpath: Q) -> Command
 where
     P: AsRef<Path>,
@@ -121,6 +132,14 @@ where
     cmd
 }
 
+/// Command to simulate [`gs_command`].
+///
+/// Please see its documentation to know what it should do.
+///
+/// This command requires a program `args` which diagnoses the command line.
+/// You can install for instance [args](https://github.com/FedericoStra/args)
+/// or [argrs](https://github.com/FedericoStra/argrs) (in this case you must
+/// symlink it to `args`).
 pub fn dry_run_command<P, Q>(inpath: P, outpath: Q) -> Command
 where
     P: AsRef<Path>,
