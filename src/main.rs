@@ -1,10 +1,16 @@
+#![feature(command_access)]
+
 #[macro_use]
 extern crate clap;
 use clap::{Arg, ArgGroup};
 
 use pdfshrink::*;
 
+use log::{debug, error, info, trace, warn};
+
 fn main() {
+    set_up_logging();
+
     let app = app_from_crate!()
         .help_message("print help information")
         .after_help("The options --inplace, --rename and --subdir are mutually exclusive.")
@@ -32,7 +38,7 @@ fn main() {
             Arg::with_name("rename")
                 .long("rename")
                 .short("r")
-                .help("save the output in a renamed file: .pdf -> .slim.pdf"),
+                .help("save the output in a renamed file: .pdf -> .slim.pdf (defaut)"),
         )
         .arg(
             Arg::with_name("subdir")
@@ -65,7 +71,7 @@ fn main() {
         eprintln!("{:#?}", matches);
         eprintln!("---");
         for arg in &["input", "output", "inplace", "rename", "subdir", "verbose"] {
-            eprintln!(
+            debug!(
                 "{} ({} {}): {:?}",
                 arg,
                 matches.occurrences_of(arg),
@@ -73,24 +79,27 @@ fn main() {
                 matches.values_of(arg)
             );
         }
-        eprint!("output mode: ");
         if matches.is_present("inplace") {
-            eprintln!("inplace");
+            debug!("output mode: inplace");
         } else if matches.is_present("rename") {
-            eprintln!("rename");
+            debug!("output mode: rename");
         } else if matches.is_present("subdir") {
-            eprintln!(
-                "subdir: {:?}",
+            debug!(
+                "output mode: subdir = {:?}",
                 matches.value_of("subdir").unwrap_or("shrunk")
             );
         } else {
-            eprintln!("no output mode specified");
+            debug!("no output mode specified, defaulting to --rename");
         }
         eprintln!();
     }
     // END DEBUG
 
     for inpath in matches.values_of("input").expect("missing input") {
+        if verbose {
+            info!("Processing {:?}", inpath);
+        }
+
         let outpath;
 
         if matches.is_present("inplace") {
@@ -101,7 +110,7 @@ fn main() {
             outpath = match pdf_into_subdir(inpath, subdir) {
                 Some(p) => p,
                 None => {
-                    eprintln!(
+                    warn!(
                         "Cannot process {:?} because the computed output is invalid",
                         inpath
                     );
@@ -112,7 +121,7 @@ fn main() {
                 let subpath = match pdf_subdir(inpath, subdir) {
                     Some(p) => p,
                     None => {
-                        eprintln!(
+                        warn!(
                             "Cannot process {:?} because the computed subdir is invalid",
                             inpath
                         );
@@ -120,7 +129,7 @@ fn main() {
                     }
                 };
                 if let Err(e) = std::fs::create_dir_all(&subpath) {
-                    eprintln!("Cannot create {:?}: {:?}", subpath, e);
+                    warn!("Cannot create {:?}: {:?}", subpath, e);
                     continue;
                 }
             }
@@ -128,7 +137,7 @@ fn main() {
             outpath = match pdf_to_cmp_pdf(inpath) {
                 Some(p) => p,
                 None => {
-                    eprintln!(
+                    warn!(
                         "Cannot process {:?} because the computed output is invalid",
                         inpath
                     );
@@ -138,25 +147,86 @@ fn main() {
         }
 
         if verbose {
-            println!("Processing {:?} -> {:?}", inpath, outpath);
+            info!("Compressing {:?} -> {:?}", inpath, outpath);
         }
 
         if dry_run {
             let mut cmd = dry_run_command(inpath, outpath);
 
             if verbose {
-                println!("Running {:?}", cmd);
+                // info!("Running {:?}", cmd);
+                let mut cmdline = String::from(cmd.get_program().to_string_lossy());
+                for arg in cmd.get_args() {
+                    cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
+                }
+                info!("Running: {}", cmdline);
             }
 
-            cmd.status().expect("failed to execute command");
+            cmd.output().expect("failed to execute command");
         } else {
             let mut cmd = gs_command(inpath, outpath);
 
             if verbose {
-                println!("Running {:?}", cmd);
+                info!("Running {:?}", cmd);
             }
 
-            cmd.status().expect("failed to execute command");
+            cmd.output().expect("failed to execute command");
         }
     }
+}
+
+fn set_up_logging() {
+    use fern::colors::{Color, ColoredLevelConfig};
+    // configure colors for the whole line
+    let line_colors = ColoredLevelConfig::new()
+        .error(Color::Red)
+        .warn(Color::Yellow)
+        // we actually don't need to specify the color for debug and info, they are white by default
+        // .info(Color::White)
+        // .debug(Color::White)
+        // depending on the terminals color scheme, this is the same as the background color
+        .trace(Color::BrightBlack);
+
+    // configure colors for the name of the level.
+    // since almost all of them are the same as the color for the whole line, we
+    // just clone `line_colors` and overwrite our changes
+    let level_colors = line_colors.clone().info(Color::Green);
+    // here we set up our fern Dispatch
+    fern::Dispatch::new()
+        // .format(move |out, message, record| {
+        //     out.finish(format_args!(
+        //         "{fg_color}[{date}][{target}][{level}{fg_color}] {message}\x1B[0m",
+        //         fg_color = format_args!(
+        //             "\x1B[{}m",
+        //             line_colors.get_color(&record.level()).to_fg_str()
+        //         ),
+        //         date = chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+        //         target = record.target(),
+        //         level = level_colors.color(record.level()),
+        //         message = message,
+        //     ));
+        // })
+        .format(move |out, message, record| {
+            out.finish(format_args!(
+                "{fg_color}[{level:>5}{fg_color}] {message}\x1B[0m",
+                fg_color = format_args!(
+                    "\x1B[{}m",
+                    line_colors.get_color(&record.level()).to_fg_str()
+                ),
+                level = level_colors.color(record.level()),
+                message = message,
+            ));
+        })
+        // set the default log level. to filter out verbose log messages from dependencies, set
+        // this to Warn and overwrite the log level for your crate.
+        .level(log::LevelFilter::Trace)
+        // change log levels for individual modules. Note: This looks for the record's target
+        // field which defaults to the module path but can be overwritten with the `target`
+        // parameter:
+        // `info!(target="special_target", "This log message is about special_target");`
+        // .level_for("pretty_colored", log::LevelFilter::Trace)
+        // output to stdout
+        .chain(std::io::stderr())
+        .apply()
+        .unwrap();
 }
