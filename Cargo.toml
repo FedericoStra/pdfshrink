@@ -1,6 +1,6 @@
 [package]
 name = "pdfshrink"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Federico Stra <stra.federico@gmail.com>"]
 description = "Shrink PDF files using Ghostscript"
 license = "MIT"
