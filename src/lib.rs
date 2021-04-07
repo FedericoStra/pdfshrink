@@ -9,6 +9,9 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[cfg(feature = "logging")]
+use log::trace;
+
 /// Replaces a `.pdf` extension with `.cmp.pdf`.
 ///
 /// If there is no extension, or the extension is not `.pdf`, returns `None`.
@@ -26,11 +29,14 @@ where
     P: AsRef<Path>,
 {
     let inpath = inpath.as_ref();
-    if inpath.extension()? == "pdf" {
+    let result = if inpath.extension() == Some("pdf".as_ref()) {
         Some(inpath.with_extension("cmp.pdf"))
     } else {
         None
-    }
+    };
+    #[cfg(feature = "logging")]
+    trace!("pdf_to_cmp_pdf({:?}) = {:?}", inpath, result);
+    result
 }
 
 /// Moves the file `inpath` into the subdirectory `subdir`.
@@ -51,8 +57,8 @@ where
     Q: AsRef<Path>,
 {
     let inpath = inpath.as_ref();
-    // let subdir = subdir.as_ref();
-    if inpath.extension()? == "pdf" {
+    let subdir = subdir.as_ref();
+    let result = if inpath.extension() == Some("pdf".as_ref()) {
         Some(
             inpath
                 .parent()
@@ -62,7 +68,10 @@ where
         )
     } else {
         None
-    }
+    };
+    #[cfg(feature = "logging")]
+    trace!("pdf_into_subdir({:?}, {:?}) = {:?}", inpath, subdir, result);
+    result
 }
 
 /// Returns the subdirectory `subdir` sibling of `inpath`.
@@ -83,12 +92,16 @@ where
     Q: AsRef<Path>,
 {
     let inpath = inpath.as_ref();
-    // let subdir = subdir.as_ref();
-    if inpath.extension()? == "pdf" {
+    let subdir = subdir.as_ref();
+
+    let result = if inpath.extension()? == "pdf" {
         Some(inpath.parent().unwrap_or("".as_ref()).join(subdir))
     } else {
         None
-    }
+    };
+    #[cfg(feature = "logging")]
+    trace!("pdf_subdir({:?}, {:?}) = {:?}", inpath, subdir, result);
+    result
 }
 
 /// Ghostscript command to shrink `inpath` and write to `outpath`.
@@ -99,6 +112,8 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
+    #[cfg(feature = "logging")]
+    trace!("gs_command({:?}, {:?})", inpath.as_ref(), outpath.as_ref());
     let mut cmd = Command::new("gs");
     cmd.args(
         [
@@ -145,6 +160,12 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
+    #[cfg(target_os = "windows")]
+    trace!(
+        "dry_run_command({:?}, {:?})",
+        inpath.as_ref(),
+        outpath.as_ref()
+    );
     let mut cmd = Command::new("args");
     cmd.args(
         [

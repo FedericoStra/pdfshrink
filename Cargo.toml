@@ -13,4 +13,18 @@ categories = ["command-line-utilities", "compression", "encoding", "filesystem"]
 
 [dependencies]
 clap = "2.33"
-tempdir = "0.3"
+# tempdir = "0.3" # needed to implement --inplace
+log = { version = "0.4", optional = true }
+
+# optional dependencies to build the binary
+fern = { version = "0.6", features = ["colored"], optional = true}
+shell-escape = { version = "0.1.5", optional = true }
+chrono = { version = "0.4.19", optional = true }
+
+[features]
+build-binary = ["logging", "fern", "shell-escape", "chrono"]
+logging = ["log"] # required to compile the library with the "log" dependency
+
+[[bin]]
+name = "pdfshrink"
+required-features = ["build-binary"]
