@@ -9,8 +9,6 @@ use pdfshrink::*;
 use log::{debug, error, info, trace, warn};
 
 fn main() {
-    set_up_logging();
-
     let app = app_from_crate!()
         .help_message("print help information")
         .after_help("The options --inplace, --rename and --subdir are mutually exclusive.")
@@ -65,6 +63,8 @@ fn main() {
     let debug = matches.is_present("debug");
     let dry_run = matches.is_present("dry-run");
     let verbose = matches.is_present("verbose");
+
+    set_up_logging(verbose);
 
     // BEGIN DEBUG
     if debug {
@@ -154,36 +154,42 @@ fn main() {
             let mut cmd = dry_run_command(inpath, outpath);
 
             if verbose {
-                // info!("Running {:?}", cmd);
+                // debug!("Running {:?}", cmd);
                 let mut cmdline = String::from(cmd.get_program().to_string_lossy());
                 for arg in cmd.get_args() {
                     cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
                 }
-                info!("Running: {}", cmdline);
+                debug!("{}", cmdline);
             }
 
-            cmd.output().expect("failed to execute command");
+            cmd.status().expect("failed to execute command");
         } else {
             let mut cmd = gs_command(inpath, outpath);
 
             if verbose {
-                info!("Running {:?}", cmd);
+                // debug!("Running {:?}", cmd);
+                let mut cmdline = String::from(cmd.get_program().to_string_lossy());
+                for arg in cmd.get_args() {
+                    cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
+                }
+                debug!("{}", cmdline);
             }
 
-            cmd.output().expect("failed to execute command");
+            cmd.status().expect("failed to execute command");
         }
     }
 }
 
-fn set_up_logging() {
+fn set_up_logging(verbose: bool) {
     use fern::colors::{Color, ColoredLevelConfig};
+
     // configure colors for the whole line
     let line_colors = ColoredLevelConfig::new()
         .error(Color::Red)
         .warn(Color::Yellow)
         // we actually don't need to specify the color for debug and info, they are white by default
         // .info(Color::White)
-        // .debug(Color::White)
+        .debug(Color::Magenta)
         // depending on the terminals color scheme, this is the same as the background color
         .trace(Color::BrightBlack);
 
@@ -191,6 +197,7 @@ fn set_up_logging() {
     // since almost all of them are the same as the color for the whole line, we
     // just clone `line_colors` and overwrite our changes
     let level_colors = line_colors.clone().info(Color::Green);
+
     // here we set up our fern Dispatch
     fern::Dispatch::new()
         // .format(move |out, message, record| {
@@ -219,7 +226,11 @@ fn set_up_logging() {
         })
         // set the default log level. to filter out verbose log messages from dependencies, set
         // this to Warn and overwrite the log level for your crate.
-        .level(log::LevelFilter::Trace)
+        .level(if verbose {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Info
+        })
         // change log levels for individual modules. Note: This looks for the record's target
         // field which defaults to the module path but can be overwritten with the `target`
         // parameter:
