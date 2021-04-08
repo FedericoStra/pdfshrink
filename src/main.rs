@@ -2,7 +2,7 @@
 
 #[macro_use]
 extern crate clap;
-use clap::{Arg, ArgGroup};
+use clap::{AppSettings, Arg, ArgGroup};
 
 use pdfshrink::*;
 
@@ -10,6 +10,7 @@ use log::{debug, error, info, trace, warn};
 
 fn main() {
     let app = app_from_crate!()
+        .setting(AppSettings::UnifiedHelpMessage)
         .help_message("print help information")
         .after_help("The options --inplace, --rename and --subdir are mutually exclusive.")
         .arg(
