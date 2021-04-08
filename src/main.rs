@@ -151,56 +151,33 @@ fn main() {
 
         info!("Compressing {:?} -> {:?}", inpath, outpath);
 
-        if dry_run {
-            let mut cmd = dry_run_command(inpath, outpath);
-
-            if verbose {
-                // debug!("Running {:?}", cmd);
-                let mut cmdline = String::from(cmd.get_program().to_string_lossy());
-                for arg in cmd.get_args() {
-                    cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
-                }
-                debug!("{}", cmdline);
-            }
-
-            let output = cmd.output().expect("failed to execute command");
-            if !output.stdout.is_empty() {
-                debug!(
-                    "STDOUT:\n{}",
-                    String::from_utf8_lossy(&output.stdout).trim_end()
-                );
-            }
-            if !output.stderr.is_empty() {
-                debug!(
-                    "STDERR:\n{}",
-                    String::from_utf8_lossy(&output.stderr).trim_end()
-                );
-            }
+        let mut cmd = if dry_run {
+            dry_run_command(inpath, outpath)
         } else {
-            let mut cmd = gs_command(inpath, outpath);
+            gs_command(inpath, outpath)
+        };
 
-            if verbose {
-                // debug!("Running {:?}", cmd);
-                let mut cmdline = String::from(cmd.get_program().to_string_lossy());
-                for arg in cmd.get_args() {
-                    cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
-                }
-                debug!("{}", cmdline);
+        if verbose {
+            // debug!("Running {:?}", cmd);
+            let mut cmdline = String::from(cmd.get_program().to_string_lossy());
+            for arg in cmd.get_args() {
+                cmdline.push_str(&format!(" {}", shell_escape::escape(arg.to_string_lossy())));
             }
+            debug!("{}", cmdline);
+        }
 
-            let output = cmd.output().expect("failed to execute command");
-            if !output.stdout.is_empty() {
-                debug!(
-                    "STDOUT:\n{}",
-                    String::from_utf8_lossy(&output.stdout).trim_end()
-                );
-            }
-            if !output.stderr.is_empty() {
-                debug!(
-                    "STDERR:\n{}",
-                    String::from_utf8_lossy(&output.stderr).trim_end()
-                );
-            }
+        let output = cmd.output().expect("failed to execute command");
+        if !output.stdout.is_empty() {
+            info!(
+                "STDOUT:\n{}",
+                String::from_utf8_lossy(&output.stdout).trim_end()
+            );
+        }
+        if !output.stderr.is_empty() {
+            debug!(
+                "STDERR:\n{}",
+                String::from_utf8_lossy(&output.stderr).trim_end()
+            );
         }
     }
 }
