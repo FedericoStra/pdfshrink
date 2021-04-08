@@ -11,51 +11,53 @@ use log::{debug, error, info, trace, warn};
 fn main() {
     let app = app_from_crate!()
         .setting(AppSettings::UnifiedHelpMessage)
-        .help_message("print help information")
+        .help_message("Print help information") // Imperative form
+        .version_message("Print version information") // Imperative form
         .after_help("The options --inplace, --rename and --subdir are mutually exclusive.")
         .arg(
             Arg::with_name("input")
                 .multiple(true)
                 .required(true)
                 .value_name("INPUT")
-                .help("input PDF to shrink"),
+                .help("Input PDF files to shrink"),
         )
         .arg(
             Arg::with_name("verbose")
                 .long("verbose")
                 .short("v")
                 .multiple(true)
-                .help("set the level of verbosity"),
+                .help("Increase the level of verbosity"),
         )
         .arg(
             Arg::with_name("inplace")
                 .long("inplace")
                 .short("i")
-                .help("replace the original file"),
+                .help("Replace the original file"),
         )
         .arg(
             Arg::with_name("rename")
                 .long("rename")
                 .short("r")
-                .help("save the output in a renamed file: .pdf -> .slim.pdf (defaut)"),
+                .help("Save the output to a renamed file: *.pdf -> *.cmp.pdf (defaut)"),
         )
         .arg(
             Arg::with_name("subdir")
                 .long("subdir")
                 .short("d")
                 .value_name("SUBDIR")
-                .help("save the output in a subdirectory"),
+                .help("Save the output in a subdirectory"),
         )
         .arg(
             Arg::with_name("debug")
                 .long("debug")
-                .help("debug the command line"),
+                .hidden(true)
+                .help("Debug the command line"),
         )
         .arg(
             Arg::with_name("dry-run")
                 .long("dry-run")
                 .short("n")
-                .help("dry run"),
+                .help("Do not actually run the commands, just show them"),
         )
         .group(ArgGroup::with_name("output").args(&["inplace", "rename", "subdir"]));
 
