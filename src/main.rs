@@ -97,7 +97,7 @@ fn main() {
 
     for inpath in matches.values_of("input").expect("missing input") {
         if verbose {
-            info!("Processing {:?}", inpath);
+            debug!("Processing {:?}", inpath);
         }
 
         let outpath;
@@ -146,9 +146,7 @@ fn main() {
             };
         }
 
-        if verbose {
-            info!("Compressing {:?} -> {:?}", inpath, outpath);
-        }
+        info!("Compressing {:?} -> {:?}", inpath, outpath);
 
         if dry_run {
             let mut cmd = dry_run_command(inpath, outpath);
@@ -162,7 +160,19 @@ fn main() {
                 debug!("{}", cmdline);
             }
 
-            cmd.status().expect("failed to execute command");
+            let output = cmd.output().expect("failed to execute command");
+            if !output.stdout.is_empty() {
+                debug!(
+                    "STDOUT:\n{}",
+                    String::from_utf8_lossy(&output.stdout).trim_end()
+                );
+            }
+            if !output.stderr.is_empty() {
+                debug!(
+                    "STDERR:\n{}",
+                    String::from_utf8_lossy(&output.stderr).trim_end()
+                );
+            }
         } else {
             let mut cmd = gs_command(inpath, outpath);
 
@@ -175,7 +185,19 @@ fn main() {
                 debug!("{}", cmdline);
             }
 
-            cmd.status().expect("failed to execute command");
+            let output = cmd.output().expect("failed to execute command");
+            if !output.stdout.is_empty() {
+                debug!(
+                    "STDOUT:\n{}",
+                    String::from_utf8_lossy(&output.stdout).trim_end()
+                );
+            }
+            if !output.stderr.is_empty() {
+                debug!(
+                    "STDERR:\n{}",
+                    String::from_utf8_lossy(&output.stderr).trim_end()
+                );
+            }
         }
     }
 }
