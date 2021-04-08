@@ -12,7 +12,7 @@ It is specifically fitted to reduce the size of scanned papers, containing image
 To install `pdfshrink` for the first time or upgrade it to the latest version, run the following command at your shell:
 
 ```bash
-cargo install pdfshrink
+cargo install --features build-binary pdfshrink
 ```
 
 ## Help message
