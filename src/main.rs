@@ -6,7 +6,7 @@ use clap::{AppSettings, Arg, ArgGroup};
 
 use pdfshrink::*;
 
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 
 fn main() {
     let app = app_from_crate!()
@@ -38,7 +38,7 @@ fn main() {
             Arg::with_name("rename")
                 .long("rename")
                 .short("r")
-                .help("Save the output to a renamed file: *.pdf -> *.cmp.pdf (defaut)"),
+                .help("Save the output to a renamed file: *.pdf -> *.shrunk.pdf (defaut)"),
         )
         .arg(
             Arg::with_name("subdir")
@@ -137,7 +137,7 @@ fn main() {
                 }
             }
         } else {
-            outpath = match pdf_to_cmp_pdf(inpath) {
+            outpath = match pdf_with_suffix(inpath, "shrunk") {
                 Some(p) => p,
                 None => {
                     warn!(
