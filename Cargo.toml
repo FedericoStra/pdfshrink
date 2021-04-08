@@ -17,12 +17,11 @@ clap = "2.33.3"
 log = { version = "0.4.14", optional = true }
 
 # optional dependencies to build the binary
-fern = { version = "0.6.0", features = ["colored"], optional = true }
+env_logger = { version = "0.8.3", optional = true }
 shell-escape = { version = "0.1.5", optional = true }
-chrono = { version = "0.4.19", optional = true }
 
 [features]
-build-binary = ["logging", "fern", "shell-escape", "chrono"]
+build-binary = ["logging", "env_logger", "shell-escape"]
 logging = ["log"] # required to compile the library with the "log" dependency
 
 [[bin]]

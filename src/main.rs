@@ -6,7 +6,7 @@ use clap::{AppSettings, Arg, ArgGroup};
 
 use pdfshrink::*;
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 
 fn main() {
     let app = app_from_crate!()
@@ -67,7 +67,7 @@ fn main() {
     let dry_run = matches.is_present("dry-run");
     let verbose = matches.is_present("verbose");
 
-    set_up_logging(verbose);
+    set_up_env_logger(verbose);
 
     // BEGIN DEBUG
     if debug {
@@ -205,6 +205,7 @@ fn main() {
     }
 }
 
+/*
 fn set_up_logging(verbose: bool) {
     use fern::colors::{Color, ColoredLevelConfig};
 
@@ -265,4 +266,49 @@ fn set_up_logging(verbose: bool) {
         .chain(std::io::stderr())
         .apply()
         .unwrap();
+}
+*/
+
+fn set_up_env_logger(verbose: bool) {
+    use std::io::Write;
+    env_logger::Builder::new()
+        .filter_level(if verbose {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Info
+        })
+        .format_timestamp(None)
+        .format_module_path(false)
+        .format(|buf, record| {
+            use env_logger::fmt::Color::*;
+            use log::Level::*;
+
+            let mut gray = buf.style();
+            gray.set_color(Black).set_intense(true);
+
+            let mut level_style = buf.style();
+            match record.level() {
+                Error => level_style.set_color(Red).set_intense(true),
+                Warn => level_style.set_color(Yellow).set_intense(true),
+                Info => level_style.set_color(Green).set_intense(true),
+                Debug => level_style.set_color(Magenta),
+                Trace => level_style.set_color(Black).set_intense(true),
+            };
+
+            let message_style = if record.level() == Info {
+                buf.style()
+            } else {
+                level_style.clone()
+            };
+
+            writeln!(
+                buf,
+                "{}{level:>5}{} {message}",
+                gray.value('['),
+                gray.value(']'),
+                level = level_style.value(record.level()),
+                message = message_style.value(record.args())
+            )
+        })
+        .init();
 }
