@@ -19,27 +19,24 @@ cargo +nightly install --features build-binary pdfshrink
 
 ```
 $ pdfshrink --help
-pdfshrink 0.1.0
+pdfshrink 0.1.7
 Federico Stra <stra.federico@gmail.com>
 Shrink PDF files using Ghostscript
 
 USAGE:
-    pdfshrink [FLAGS] [OPTIONS] <INPUT>...
-
-FLAGS:
-        --debug      debug the command line
-    -n, --dry-run    dry run
-    -h, --help       print help information
-    -i, --inplace    replace the original file
-    -r, --rename     save the output in a renamed file: .pdf -> .slim.pdf
-    -V, --version    Prints version information
-    -v, --verbose    set the level of verbosity
+    pdfshrink [OPTIONS] <INPUT>...
 
 OPTIONS:
-    -d, --subdir <SUBDIR>    save the output in a subdirectory
+    -n, --dry-run            Do not actually run the commands, just show them
+    -h, --help               Print help information
+    -i, --inplace            Replace the original file
+    -r, --rename             Save the output to a renamed file: *.pdf -> *.shrunk.pdf (defaut)
+    -d, --subdir <SUBDIR>    Save the output in a subdirectory
+    -V, --version            Print version information
+    -v, --verbose            Increase the level of verbosity
 
 ARGS:
-    <INPUT>...    input PDF to shrink
+    <INPUT>...    Input PDF files to shrink
 
 The options --inplace, --rename and --subdir are mutually exclusive.
 ```
