@@ -11,6 +11,7 @@ use log::{debug, info, warn};
 fn main() {
     let app = app_from_crate!()
         .setting(AppSettings::UnifiedHelpMessage)
+        .setting(AppSettings::ColoredHelp)
         .help_message("Print help information") // Imperative form
         .version_message("Print version information") // Imperative form
         .after_help("The options --inplace, --rename and --subdir are mutually exclusive.")
