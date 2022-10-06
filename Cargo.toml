@@ -21,6 +21,7 @@ env_logger = { version = "0.8.3", optional = true }
 shell-escape = { version = "0.1.5", optional = true }
 
 [features]
+default = ["build-binary"]
 build-binary = ["logging", "env_logger", "shell-escape"]
 logging = ["log"] # required to compile the library with the "log" dependency
 
