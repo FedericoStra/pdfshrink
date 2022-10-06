@@ -28,6 +28,3 @@ logging = ["log"] # required to compile the library with the "log" dependency
 [[bin]]
 name = "pdfshrink"
 required-features = ["build-binary"]
-
-[package.metadata.release]
-no-dev-version = true
