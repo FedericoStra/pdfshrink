@@ -1,5 +1,3 @@
-#![feature(command_access)]
-
 #[macro_use]
 extern crate clap;
 use clap::{AppSettings, Arg, ArgGroup};
